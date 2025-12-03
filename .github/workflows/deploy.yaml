@@ -40,5 +40,5 @@ jobs:
     - name: Retrieve AWS S3 bucket name
       run: |
             aws --version
-            terrform --version  
+            terraform --version  
             aws s3 ls 
