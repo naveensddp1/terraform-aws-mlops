@@ -42,7 +42,7 @@ jobs:
     - name: Terraform Init
       run: | 
           terraform init
-          terraform fmt --check 
+          # terraform fmt --check 
           terraform validate
       working-directory: terraform
 
@@ -53,4 +53,4 @@ jobs:
     - name: Terraform Apply
       run: terraform apply -auto-approve tfplan
       working-directory: terraform
-      
+

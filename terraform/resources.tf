@@ -1,5 +1,6 @@
 resource "aws_dynamodb_table" "terraform_locks" {
      name         = "terraform-state-lock-table"
+     billing_mode   = "PAY_PER_REQUEST"
      hash_key     = "LockID"
      attribute {
         name = "LockID"
@@ -30,8 +31,8 @@ data "aws_ami" "amazon_linux_latest" {
 
 resource "aws_instance" "mlflow-server"{
     ami                 = data.aws_ami.amazon_linux_latest.id
-    instance_type       = t2.micro
-    key_name            = kp-mlflow-server
+    instance_type       = "t2.micro"
+    key_name            = "mlflow-server-kp"
     tags = {            
     Name = "mlflow-server"
     Environment = "Dev"
@@ -49,15 +50,12 @@ resource "aws_instance" "mlflow-server"{
     EOF
 }
 
-data "aws_vpc" "default" {
-  default = true
-}
+data "aws_vpc" "default" { default = true }
 
 resource "aws_security_group" "mlflow_sg" {
-  
-  name        = "mlflow-security-group"
-  description = "Allow HTTP, HTTPS , SSH , MLFLOW traffic"
-  vpc_id = data.aws_vpc.default.id
+    name        = "mlflow-security-group"
+    description = "Allow HTTP, HTTPS , SSH , MLFLOW traffic"
+    vpc_id = data.aws_vpc.default.id
 
   ingress {
     description = "Allow HTTP"
@@ -100,6 +98,6 @@ ingress {
   }
 
   tags = {
-    Name = "example-security-group"
+    Name = "mlflow-security-group"
   }
 }
