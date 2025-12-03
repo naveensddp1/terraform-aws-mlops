@@ -93,13 +93,28 @@ resource "aws_instance" "mlflow-server" {
     Owner = "Naveen-Rahil"
     }
     user_data = <<-EOF
+    
     #!/bin/bash
-    yum update -y 
+    yum update -y
     yum install -y python3 python3-pip
-    pip install mlflow boto3
-    mlflow server \
-        --file-store sqlite:///mlflow.db \
-        --default-artifact-root s3://mlops-naveen-rahil-terraform-source/mlflow-artifacts \
-        --host 0.0.0.0 --port 5000
+    pip3 install mlflow boto3
+    cat > /etc/systemd/system/mlflow.service <<'SERVICE'
+    [Unit]
+    Description=MLflow Server
+    After=network.target
+
+    [Service]
+    User=ec2-user
+    WorkingDirectory=/home/ec2-user
+    ExecStart=/usr/local/bin/mlflow server --file-store sqlite:///mlflow.db --default-artifact-root s3://mlops-naveen-rahil-terraform-source/mlflow-artifacts --host 0.0.0.0 --port 5000
+    Restart=always
+
+    [Install]
+    WantedBy=multi-user.target
+    SERVICE
+    systemctl daemon-reload
+    systemctl enable mlflow
+    systemctl start mlflow
     EOF
+
 }
