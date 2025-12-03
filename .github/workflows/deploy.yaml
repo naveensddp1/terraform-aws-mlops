@@ -26,7 +26,7 @@ jobs:
       #working-directory: ./terraform-aws-mlops
 
     - name: Print Workflow and Repository Name
-        run: |
+      run: |
           echo "Workflow Name: ${{ github.workflow }}"
           echo "Repository Name: ${{ github.repository }}"
           echo "Workflow PAth: ${{ github.workflow_path }}"
