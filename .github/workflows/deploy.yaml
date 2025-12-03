@@ -46,6 +46,13 @@ jobs:
           terraform validate
       working-directory: terraform
 
+
+    - name: Terraform Plan
+      run: |  
+          terraform import aws_security_group.mlflow_sg sg-0d0afcaf9d8d21f0c
+          terraform import aws_iam_instance_profile.ec2_s3_profile ec2-s3-instance-profile
+      working-directory: terraform
+
     - name: Terraform Plan
       run: terraform plan -out=tfplan
       working-directory: terraform
