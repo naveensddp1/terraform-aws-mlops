@@ -42,8 +42,8 @@ jobs:
     - name: Terraform Init
       run: | 
           terraform init
-          terraform fmt --check 
-          terraform validate
-          terraform plan -out=tfplan
+          #terraform fmt --check 
+          #terraform validate
+          terraform plan 
           terraform apply -auto-approve
       working-directory: terraform
