@@ -23,6 +23,6 @@ jobs:
 
     - name: Terraform Init
       run: terraform init
-      working-directory: ./terraform-aws-mlops
+      #working-directory: ./terraform-aws-mlops
 
       
