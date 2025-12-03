@@ -29,26 +29,6 @@ data "aws_ami" "amazon_linux_latest" {
   }
 }
 
-resource "aws_instance" "mlflow-server"{
-    ami                 = data.aws_ami.amazon_linux_latest.id
-    instance_type       = "t2.micro"
-    key_name            = "mlflow-server-kp"
-    tags = {            
-    Name = "mlflow-server"
-    Environment = "Dev"
-    Owner = "Naveen-Rahil"
-    }
-    user_data = <<-EOF
-    #!/bin/bash
-    yum update -y 
-    yum install -y python3 python3-pip
-    pip install mlflow boto3
-    mlflow server \
-        --file-store sqlite:///mlflow.db \
-        --default-artifact-root s3://mlops-naveen-rahil-terraform-source/mlflow-artifacts \
-        --host 0.0.0.0 --port 5000
-    EOF
-}
 
 data "aws_vpc" "default" { default = true }
 
@@ -100,4 +80,26 @@ ingress {
   tags = {
     Name = "mlflow-security-group"
   }
+}
+
+resource "aws_instance" "mlflow-server" {
+    ami                 = data.aws_ami.amazon_linux_latest.id
+    instance_type       = "t2.micro"
+    key_name            = "mlflow-server-kp"
+    vpc_security_group_ids = [aws_security_group.mlflow_sg.id]
+    tags = {            
+    Name = "mlflow-server"
+    Environment = "Dev"
+    Owner = "Naveen-Rahil"
+    }
+    user_data = <<-EOF
+    #!/bin/bash
+    yum update -y 
+    yum install -y python3 python3-pip
+    pip install mlflow boto3
+    mlflow server \
+        --file-store sqlite:///mlflow.db \
+        --default-artifact-root s3://mlops-naveen-rahil-terraform-source/mlflow-artifacts \
+        --host 0.0.0.0 --port 5000
+    EOF
 }
