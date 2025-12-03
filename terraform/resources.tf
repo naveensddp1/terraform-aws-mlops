@@ -40,11 +40,15 @@ data "aws_vpc" "default" {
   default = true
 }
 
+
 resource "aws_security_group" "mlflow_sg" {
   name        = "mlflow-security-group"
   description = "Allow HTTP, HTTPS, SSH, and MLFLOW"
   vpc_id      = data.aws_vpc.default.id
 
+  lifecycle {
+    create_before_destroy = true
+  }
   ingress {
     description = "Allow HTTP"
     from_port   = 80
