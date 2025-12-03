@@ -26,4 +26,4 @@ jobs:
       #working-directory: ./terraform-aws-mlops
 
     - name: Information
-      run : echo ${{ github.workspace }} ${{github_repository }} ${{github_path}} ${{github_ref}} ${{github_workflow}} ${{github_action}}
+      run : echo ${{ github_workflow }} ${{ github_repository }} ${{ github_path }} ${{ github_ref }} ${{ github_workflow }} ${{ github_action }} ${{ github_actor }} ${{ github_event_name }}
