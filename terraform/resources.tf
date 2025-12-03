@@ -106,7 +106,7 @@ resource "aws_instance" "mlflow-server" {
     [Service]
     User=ec2-user
     WorkingDirectory=/home/ec2-user
-    ExecStart=/usr/local/bin/mlflow server --file-store sqlite:///mlflow.db --default-artifact-root s3://mlops-naveen-rahil-terraform-source/mlflow-artifacts --host 0.0.0.0 --port 5000
+    ExecStart=/usr/local/bin/mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root s3://mlops-naveen-rahil-terraform-source/mlflow-artifacts --host 0.0.0.0 --port 5000
     Restart=always
 
     [Install]
