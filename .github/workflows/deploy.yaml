@@ -42,7 +42,6 @@ jobs:
           echo "Job: ${{ github.job }}
           echo "Server URL: ${{ github.server_url }}
           echo "API URL: ${{ github.api_url }}
-          echo "GraphQL URL: ${{ github.graphql_url }}
           echo "Repository URL: ${{ github.repository_url }}
           echo "Issues URL: ${{ github.issues_url }}
           echo "Pull Request URL: ${{ github.pull_request_url }}
@@ -51,8 +50,5 @@ jobs:
           echo "Jobs URL: ${{ github.jobs_url }}
           echo "Runs URL: ${{ github.runs_url }}
           echo "Artifacts URL: ${{ github.artifacts_url }}
-          echo "Cache URL: ${{ github.cache_url }}
-          echo "Dependabot URL: ${{ github.dependabot_url }}
           echo "Packages URL: ${{ github.packages_url }}
           echo "Milestones URL: ${{ github.milestones_url }}"
-          
