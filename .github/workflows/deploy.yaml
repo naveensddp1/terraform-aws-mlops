@@ -25,4 +25,5 @@ jobs:
       run: terraform init
       #working-directory: ./terraform-aws-mlops
 
-      
+    - name: Information
+      run : echo ${{ github.workspace }} ${{github_repository }} ${{github_path}} ${{github_ref}} ${{github_workflow}} ${{github_action}}
