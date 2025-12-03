@@ -109,7 +109,8 @@ resource "aws_instance" "mlflow-server" {
     instance_type       = "t2.micro"
     key_name            = "mlflow-server-kp"
     vpc_security_group_ids = [aws_security_group.mlflow_sg.id]
-    iam_instance_profile = aws_iam_role.ec2_s3_role.name
+    #iam_instance_profile = aws_iam_role.ec2_s3_role.name
+    iam_instance_profile = aws_iam_instance_profile.ec2_s3_profile.name
     tags = {            
     Name = "mlflow-server"
     Environment = "Dev"
