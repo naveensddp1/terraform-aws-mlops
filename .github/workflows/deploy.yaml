@@ -21,8 +21,9 @@ jobs:
         aws-region: ap-south-1
 
     - name: Terraform Init
-      run: terraform init
-      run: terraform fmt --check 
+      run: | 
+          terraform init
+          terraform fmt --check 
       working-directory: terraform
 
     - name: Print Workflow and Repository Name
