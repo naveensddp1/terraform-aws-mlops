@@ -93,11 +93,15 @@ resource "aws_instance" "mlflow-server" {
     Owner = "Naveen-Rahil"
     }
     user_data = <<-EOF
-    
     #!/bin/bash
     yum update -y
-    yum install -y python3 python3-pip
-    pip3 install mlflow boto3
+    yum install -y python3 python3-devel gcc
+    python3 -m ensurepip --upgrade
+    pip3 install --user virtualenv mlflow boto3
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> /home/ec2-user/.bashrc
+    source /home/ec2-user/.bashrc
+    mkdir -p /home/ec2-user/mlflow-data
+    chown ec2-user:ec2-user /home/ec2-user/mlflow-data
     cat > /etc/systemd/system/mlflow.service <<'SERVICE'
     [Unit]
     Description=MLflow Server
@@ -106,15 +110,19 @@ resource "aws_instance" "mlflow-server" {
     [Service]
     User=ec2-user
     WorkingDirectory=/home/ec2-user
-    ExecStart=/usr/local/bin/mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root s3://mlops-naveen-rahil-terraform-source/mlflow-artifacts --host 0.0.0.0 --port 5000
+    Environment=PATH=/home/ec2-user/.local/bin:/usr/local/bin:/usr/bin:/bin
+    ExecStart=/home/ec2-user/.local/bin/mlflow server \
+        --backend-store-uri sqlite:///mlflow.db \
+        --default-artifact-root s3://mlops-naveen-rahil-terraform-source/mlflow-artifacts \
+        --host 0.0.0.0 --port 5000
     Restart=always
+    RestartSec=10
 
     [Install]
     WantedBy=multi-user.target
     SERVICE
     systemctl daemon-reload
-    systemctl enable mlflow
-    systemctl start mlflow
+    systemctl enable mlflow.service
+    systemctl start mlflow.service
     EOF
-
 }
