@@ -1,41 +1,49 @@
 resource "aws_dynamodb_table" "terraform_locks" {
-     name         = "terraform-state-lock-table"
-     billing_mode   = "PAY_PER_REQUEST"
-     hash_key     = "LockID"
-     attribute {
-        name = "LockID"
-        type = "S"
-    }
-    tags = {
-        Name        = "terraform-state-lock-table"
-        Environment = "Dev" 
-    }
+  name         = "terraform-state-lock-table"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+
+  tags = {
+    Name        = "terraform-state-lock-table"
+    Environment = "Dev"
+  }
 }
 
+# Get Latest Amazon Linux 2 AMI
 data "aws_ami" "amazon_linux_latest" {
   most_recent = true
   owners      = ["amazon"]
+
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"] 
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
+
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
   }
+
   filter {
     name   = "architecture"
-    values = ["x86_64"] 
+    values = ["x86_64"]
   }
 }
 
-
-data "aws_vpc" "default" { default = true }
+# Default VPC
+data "aws_vpc" "default" {
+  default = true
+}
 
 resource "aws_security_group" "mlflow_sg" {
-    name        = "mlflow-security-group"
-    description = "Allow HTTP, HTTPS , SSH , MLFLOW traffic"
-    vpc_id = data.aws_vpc.default.id
+  name        = "mlflow-security-group"
+  description = "Allow HTTP, HTTPS, SSH, and MLFLOW"
+  vpc_id      = data.aws_vpc.default.id
 
   ingress {
     description = "Allow HTTP"
@@ -58,22 +66,22 @@ resource "aws_security_group" "mlflow_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] 
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-ingress {
+  ingress {
     description = "Allow MLFLOW"
     from_port   = 5000
     to_port     = 5000
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] 
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    description = "Allow all outbound traffic"
+    description = "Allow all outbound"
     from_port   = 0
     to_port     = 0
-    protocol    = "-1" # Represents all protocols
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -82,6 +90,7 @@ ingress {
   }
 }
 
+# EC2 IAM role
 resource "aws_iam_role" "ec2_s3_role" {
   name = "ec2-s3-fullaccess-role"
 
@@ -97,56 +106,67 @@ resource "aws_iam_role" "ec2_s3_role" {
   })
 }
 
-# Attach AmazonS3FullAccess managed policy
+# Attach Amazon S3 Full Access
 resource "aws_iam_role_policy_attachment" "s3_full_access" {
   role       = aws_iam_role.ec2_s3_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
+# REQUIRED Instance Profile
+resource "aws_iam_instance_profile" "ec2_s3_profile" {
+  name = "ec2-s3-instance-profile"
+  role = aws_iam_role.ec2_s3_role.name
+}
 
 resource "aws_instance" "mlflow-server" {
-    ami                 = data.aws_ami.amazon_linux_latest.id
-    instance_type       = "t2.micro"
-    key_name            = "mlflow-server-kp"
-    vpc_security_group_ids = [aws_security_group.mlflow_sg.id]
-    #iam_instance_profile = aws_iam_role.ec2_s3_role.name
-    iam_instance_profile = aws_iam_instance_profile.ec2_s3_profile.name
-    tags = {            
-    Name = "mlflow-server"
+  ami                    = data.aws_ami.amazon_linux_latest.id
+  instance_type          = "t2.micro"
+  key_name               = "mlflow-server-kp"
+  vpc_security_group_ids = [aws_security_group.mlflow_sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.ec2_s3_profile.name
+
+  tags = {
+    Name        = "mlflow-server"
     Environment = "Dev"
-    Owner = "Naveen-Rahil"
-    }
-    user_data = <<-EOF
-    #!/bin/bash
-    yum update -y
-    yum install -y python3 python3-devel gcc
-    python3 -m ensurepip --upgrade
-    pip3 install --user virtualenv mlflow boto3
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> /home/ec2-user/.bashrc
-    source /home/ec2-user/.bashrc
-    mkdir -p /home/ec2-user/mlflow-data
-    chown ec2-user:ec2-user /home/ec2-user/mlflow-data
-    cat > /etc/systemd/system/mlflow.service <<'SERVICE'
-    [Unit]
-    Description=MLflow Server
-    After=network.target
+    Owner       = "Naveen-Rahil"
+  }
 
-    [Service]
-    User=ec2-user
-    WorkingDirectory=/home/ec2-user
-    Environment=PATH=/home/ec2-user/.local/bin:/usr/local/bin:/usr/bin:/bin
-    ExecStart=/home/ec2-user/.local/bin/mlflow server \
-        --backend-store-uri sqlite:///mlflow.db \
-        --default-artifact-root s3://mlops-naveen-rahil-terraform-source/mlflow-artifacts \
-        --host 0.0.0.0 --port 5000
-    Restart=always
-    RestartSec=10
+  user_data = <<-EOF
+  #!/bin/bash
+  yum update -y
+  yum install -y python3 python3-devel gcc
+  python3 -m ensurepip --upgrade
+  pip3 install --user virtualenv mlflow boto3
 
-    [Install]
-    WantedBy=multi-user.target
-    SERVICE
-    systemctl daemon-reload
-    systemctl enable mlflow.service
-    systemctl start mlflow.service
-    EOF
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> /home/ec2-user/.bashrc
+  source /home/ec2-user/.bashrc
+
+  mkdir -p /home/ec2-user/mlflow-data
+  chown ec2-user:ec2-user /home/ec2-user/mlflow-data
+
+  cat > /etc/systemd/system/mlflow.service << 'SERVICE'
+  [Unit]
+  Description=MLflow Server
+  After=network.target
+
+  [Service]
+  User=ec2-user
+  WorkingDirectory=/home/ec2-user
+  Environment=PATH=/home/ec2-user/.local/bin:/usr/local/bin:/usr/bin:/bin
+  ExecStart=/home/ec2-user/.local/bin/mlflow server \
+    --backend-store-uri sqlite:///mlflow.db \
+    --default-artifact-root s3://mlops-naveen-rahil-terraform-source/mlflow-artifacts \
+    --host 0.0.0.0 \
+    --port 5000
+  Restart=always
+  RestartSec=10
+
+  [Install]
+  WantedBy=multi-user.target
+  SERVICE
+
+  systemctl daemon-reload
+  systemctl enable mlflow.service
+  systemctl start mlflow.service
+  EOF
 }
