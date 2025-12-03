@@ -11,7 +11,7 @@ jobs:
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: 1.14.0
+        terraform_version: 1.9.5
 
     - name: AWS Client Setup 
       uses: aws-actions/configure-aws-credentials@v2
@@ -42,8 +42,15 @@ jobs:
     - name: Terraform Init
       run: | 
           terraform init
-          #terraform fmt --check 
-          #terraform validate
-          terraform plan 
-          terraform apply -auto-approve
+          terraform fmt --check 
+          terraform validate
       working-directory: terraform
+
+    - name: Terraform Plan
+      run: terraform plan -out=tfplan
+      working-directory: terraform
+
+    - name: Terraform Apply
+      run: terraform apply -auto-approve tfplan
+      working-directory: terraform
+      

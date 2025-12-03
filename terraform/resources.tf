@@ -38,21 +38,26 @@ resource "aws_instance" "mlflow-server"{
     Owner = "Naveen-Rahil"
     }
     user_data = <<-EOF
-              #!/bin/bash
-              sudo apt-get update
-              sudo apt-get install -y python3
-              pip install mlflow boto3
-              sudo  mlflow server \
-                    --file-store sqlite:///mlflow.db \
-                    --default-artifact-root s3://mlops-naveen-rahil-terraform-source/mlflow-artifacts \
-                    --host 0.0.0.0 --port 5000
-              EOF
+    #!/bin/bash
+    yum update -y 
+    yum install -y python3 python3-pip
+    pip install mlflow boto3
+    mlflow server \
+        --file-store sqlite:///mlflow.db \
+        --default-artifact-root s3://mlops-naveen-rahil-terraform-source/mlflow-artifacts \
+        --host 0.0.0.0 --port 5000
+    EOF
+}
+
+data "aws_vpc" "default" {
+  default = true
 }
 
 resource "aws_security_group" "mlflow_sg" {
+  
   name        = "mlflow-security-group"
   description = "Allow HTTP, HTTPS , SSH , MLFLOW traffic"
-  vpc_id      = aws_vpc.main.id # Reference to an existing VPC
+  vpc_id = data.aws_vpc.default.id
 
   ingress {
     description = "Allow HTTP"
